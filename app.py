@@ -18,7 +18,7 @@ st.set_page_config(
 model = joblib.load("loan_approval_model.pkl")
 
 # -------------------------
-# CUSTOM STYLE (LIGHT & CLEAN)
+# CUSTOM STYLES
 # -------------------------
 st.markdown(
     """
@@ -42,7 +42,7 @@ st.markdown(
     """
     <h1 style='text-align: center;'>🏦 Loan Approval Predictor</h1>
     <p style='text-align: center; color: gray;'>
-    Enter applicant details in the sidebar to check loan approval
+    Enter applicant details in the sidebar to check loan approval status
     </p>
     <hr>
     """,
@@ -100,7 +100,7 @@ with st.sidebar:
         help="Credit score indicating repayment history"
     )
 
-    st.subheader("💰 Assets")
+    st.subheader("💰 Asset Details")
 
     residential_assets_value = st.number_input(
         "Residential Assets (₹)",
@@ -117,7 +117,7 @@ with st.sidebar:
     luxury_assets_value = st.number_input(
         "Luxury Assets (₹)",
         min_value=0,
-        help="Value of luxury items (cars, jewelry, etc.)"
+        help="Value of luxury items like cars or jewelry"
     )
 
     bank_asset_value = st.number_input(
@@ -135,7 +135,7 @@ education = 1 if education == "Graduate" else 0
 self_employed = 1 if self_employed == "Yes" else 0
 
 # =========================
-# MAIN AREA – RESULTS
+# MAIN LOGIC
 # =========================
 if predict_btn:
 
@@ -153,11 +153,41 @@ if predict_btn:
         "bank_asset_value": [bank_asset_value]
     })
 
+    # -------------------------
+    # BUSINESS RULES (BANK LOGIC)
+    # -------------------------
+    if cibil_score < 600:
+        st.markdown(
+            """
+            <div class="card">
+                <h2 style="color: red;">❌ Loan Rejected</h2>
+                <p>Reason: Credit score is too low</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.stop()
+
+    if income_annum < loan_amount * 0.3:
+        st.markdown(
+            """
+            <div class="card">
+                <h2 style="color: red;">❌ Loan Rejected</h2>
+                <p>Reason: Income is insufficient for requested loan</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.stop()
+
+    # -------------------------
+    # ML MODEL PREDICTION
+    # -------------------------
     prediction = model.predict(input_data)[0]
     probability = model.predict_proba(input_data)[0][1]
 
     # -------------------------
-    # DASHBOARD RESULT CARD
+    # RESULT CARD
     # -------------------------
     if prediction == 1:
         st.markdown(
@@ -181,7 +211,7 @@ if predict_btn:
         )
 
     # -------------------------
-    # FINANCIAL SNAPSHOT CHART
+    # FINANCIAL OVERVIEW CHART
     # -------------------------
     st.subheader("📊 Financial Overview")
 
@@ -199,7 +229,7 @@ if predict_btn:
     st.pyplot(fig)
 
     # -------------------------
-    # CREDIT SCORE FEEDBACK
+    # CREDIT SCORE INSIGHT
     # -------------------------
     st.subheader("📈 Credit Score Insight")
 
